@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using Unity.Collections;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
@@ -15,7 +16,13 @@ public class QRScanner : MonoBehaviour
     public GameObject uiPanelPrefab;
     private GameObject activePanel;
     private string lastScannedCode = "";
+    public Button playButton;
+    private string videoUrl;
 
+    // void Start()
+    // {
+    //     playButton.onClick.AddListener(OpenWebView);
+    // }
     void OnEnable()
     {
         if (cameraManager != null)
@@ -64,7 +71,7 @@ public class QRScanner : MonoBehaviour
         if (result != null && result.Text != lastScannedCode)
         {
             Debug.Log("QR Code Detected: " + result.Text);
-            resultText.text = "Scanned: " + result.Text;
+            // resultText.text = "Scanned: " + result.Text;
             lastScannedCode = result.Text;
             ShowUIPanel(result.Text);
         }
@@ -72,22 +79,51 @@ public class QRScanner : MonoBehaviour
 
     void ShowUIPanel(string qrValue)
     {
-    if (activePanel != null)
-        Destroy(activePanel);
+        //force single UI panel window    
+        if (activePanel != null)
+            Destroy(activePanel);
 
-    // Position: in front of the AR Camera
-    Vector3 spawnPosition = cameraManager.GetComponent<Camera>().transform.position +
-                            cameraManager.GetComponent<Camera>().transform.forward * 0.5f;
+        // Position: in front of the AR Camera
+        Vector3 spawnPosition = cameraManager.GetComponent<Camera>().transform.position +
+                                cameraManager.GetComponent<Camera>().transform.forward * 0.5f;
 
-    activePanel = Instantiate(uiPanelPrefab, spawnPosition, Quaternion.identity);
+        activePanel = Instantiate(uiPanelPrefab, spawnPosition, Quaternion.identity);
+        playButton = activePanel.GetComponentInChildren<Button>();
+        if (playButton != null)
+        {
+            playButton.onClick.AddListener(OpenWebView);
+        }
+        else
+        {
+            Debug.LogWarning("No Button found in the instantiated UI panel.");
+        }
 
-    // Make sure it always faces the camera
-    activePanel.AddComponent<FaceCamera>();
+        // Set the text inside the panel (assumes it has a TextMeshProUGUI child)
+        var text = activePanel.GetComponentInChildren<TextMeshProUGUI>();
+        if (text != null)
+        {
+            text.text = $"How to style men's {qrValue}s!";
+        }
 
-    // Set the text inside the panel (assumes it has a TextMeshProUGUI child)
-    var text = activePanel.GetComponentInChildren<TextMeshProUGUI>();
-    if (text != null)
-        text.text = $"Item Info:\n{qrValue}";
+
+        if (qrValue == "Jacket")
+        {
+           videoUrl = $"https://www.youtube.com/watch?v=w4OEEUw-Ed0";
+        }
+        if (qrValue == "Pant")
+        {
+            videoUrl = $"https://www.youtube.com/watch?v=llk3lJuQZZY";
+        }
+        if (qrValue == "Tee")
+        {
+            videoUrl = $"https://www.youtube.com/watch?v=RSuGQNV11Vc";
+        }
+    }
+
+    void OpenWebView()
+    {
+        // Make sure LightWebviewAndroid is properly imported and initialized
+        LightWebviewAndroid.instance.open(videoUrl, LightWebviewAndroid.CloseMode.back);
     }
 
 }
